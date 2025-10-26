@@ -13,6 +13,9 @@ const HOST = process.env.HOST || '0.0.0.0';
 const STATIC_DIR = path.join(process.cwd(), 'public');
 const UPLOAD_DIR = path.join(process.cwd(), process.env.UPLOAD_DIR || 'uploads');
 
+// Global constant: upstream Git repository to use for status/pull
+export const UPSTREAM_REPO = 'https://github.com/TheGamby/DockerDonkey.git';
+
 // Ensure upload dir exists
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
@@ -60,21 +63,38 @@ app.use('/uploads', express.static(UPLOAD_DIR));
 
 // Routes: Git
 const git = simpleGit({ baseDir: process.cwd() });
+
+async function ensureOriginRemote() {
+  const remotes = await git.getRemotes(true);
+  const origin = remotes.find(r => r.name === 'origin');
+  if (!origin) {
+    await git.addRemote('origin', UPSTREAM_REPO);
+  } else {
+    const currentUrl = origin.refs.fetch || origin.refs.push;
+    if (currentUrl && currentUrl !== UPSTREAM_REPO) {
+      await git.remote(['set-url', 'origin', UPSTREAM_REPO]);
+    }
+  }
+}
+
 app.get('/api/git/status', asyncHandler(async (_req, res) => {
   const isRepo = await git.checkIsRepo();
   if (!isRepo) return res.json({ ok: true, repo: false });
-  await git.fetch();
+
+  // Ensure remote "origin" points to our upstream
+  await ensureOriginRemote();
+
+  // Fetch from origin
+  await git.fetch('origin');
   const branch = await git.branch();
   const current = branch.current;
   const status = await git.status();
-  const upstream = branch.branches[current]?.upstream || null;
+  const upstream = `origin/${current}`;
   let ahead = 0, behind = 0;
   try {
-    if (upstream) {
-      const r = await git.raw(['rev-list', '--left-right', '--count', `${current}...${upstream}`]);
-      const [a, b] = r.trim().split('\t').map(n => Number(n));
-      ahead = a || 0; behind = b || 0;
-    }
+    const r = await git.raw(['rev-list', '--left-right', '--count', `${current}...${upstream}`]);
+    const [a, b] = r.trim().split('\t').map(n => Number(n));
+    ahead = a || 0; behind = b || 0;
   } catch (_) { /* ignore */ }
   res.json({ ok: true, repo: true, branch: current, upstream, ahead, behind, summary: status });
 }));
@@ -82,8 +102,11 @@ app.get('/api/git/status', asyncHandler(async (_req, res) => {
 app.post('/api/git/pull', asyncHandler(async (_req, res) => {
   const isRepo = await git.checkIsRepo();
   if (!isRepo) return res.status(400).json({ ok: false, error: 'Not a Git repository' });
-  await git.fetch();
-  const result = await git.pull();
+
+  await ensureOriginRemote();
+  await git.fetch('origin');
+  const current = (await git.branch()).current;
+  const result = await git.pull('origin', current);
   res.json({ ok: true, result });
 }));
 
