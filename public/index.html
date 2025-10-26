@@ -1,0 +1,105 @@
+﻿<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DockerDonkey</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { brand: { 500: '#0ea5e9', 600: '#0284c7' } }
+        }
+      }
+    }
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🐳</text></svg>">
+</head>
+<body class="bg-slate-50 text-slate-800">
+  <header class="sticky top-0 z-10 backdrop-blur bg-white/80 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+      <div class="text-2xl font-semibold">DockerDonkey</div>
+      <div class="ml-auto flex items-center gap-2 text-sm">
+        <span id="healthDot" class="inline-block w-2 h-2 rounded-full bg-gray-300"></span>
+        <span id="healthText" class="text-slate-500">Verbinde…</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+          <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="font-semibold">Container</h2>
+            <label class="text-sm flex items-center gap-2"><input id="toggleAll" type="checkbox" class="accent-brand-600"> Alle anzeigen</label>
+          </div>
+          <div id="containers" class="divide-y divide-slate-100"></div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+          <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="font-semibold">Images</h2>
+            <form id="pullForm" class="flex items-center gap-2">
+              <input id="pullImage" type="text" placeholder="nginx:latest" class="border rounded px-2 py-1 text-sm" />
+              <button class="bg-brand-600 hover:bg-brand-500 text-white text-sm rounded px-3 py-1">Pull</button>
+            </form>
+          </div>
+          <div id="images" class="divide-y divide-slate-100"></div>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+          <div class="p-4 border-b border-slate-100">
+            <h2 class="font-semibold">Datei-Upload (Drag & Drop)</h2>
+          </div>
+          <div class="p-4">
+            <div id="dropZone" class="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center text-slate-500 hover:border-brand-600 transition cursor-pointer">
+              Dateien hierher ziehen oder klicken
+            </div>
+            <input id="fileInput" type="file" multiple class="hidden" />
+            <ul id="uploadList" class="mt-3 space-y-2 text-sm"></ul>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+          <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="font-semibold">Git</h2>
+            <button id="refreshGit" class="text-sm text-brand-600 hover:underline">Aktualisieren</button>
+          </div>
+          <div id="gitStatus" class="p-4 text-sm text-slate-600">
+            Lade…
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <template id="containerRow">
+    <div class="p-4 flex flex-wrap gap-2 items-center">
+      <div class="grow min-w-[240px]">
+        <div class="font-medium name"></div>
+        <div class="text-xs text-slate-500 id mt-0.5"></div>
+      </div>
+      <span class="px-2 py-0.5 rounded text-xs status"></span>
+      <div class="ms-auto flex items-center gap-2">
+        <button class="btn start hidden">Start</button>
+        <button class="btn stop hidden">Stop</button>
+        <button class="btn restart">Restart</button>
+        <button class="btn outline logs">Logs</button>
+        <button class="btn danger remove">Remove</button>
+      </div>
+    </div>
+  </template>
+
+  <style>
+    .btn{ @apply bg-brand-600 hover:bg-brand-500 text-white text-sm rounded px-3 py-1; }
+    .btn.danger{ @apply bg-red-600 hover:bg-red-500; }
+    .btn.outline{ @apply bg-white text-slate-700 border border-slate-300 hover:bg-slate-50; }
+  </style>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
