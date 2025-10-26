@@ -107,4 +107,7 @@ sudo systemctl enable dockerdonkey --now
   - Lint/Format: Projektstil beibehalten, Prettier/ESLint optional ergänzen.
 
 #### Lizenz
-Projektspezifische Lizenz hier ergänzen (z. B. MIT).
+Dieses Projekt ist unter der MIT-Lizenz veröffentlicht.
+
+- Kurzfassung: freie Nutzung, Änderung, Verbreitung und kommerzielle Nutzung erlaubt, solange der Copyright- und Lizenzhinweis enthalten bleibt. Ohne Gewährleistung.
+- Volltext: siehe Datei LICENSE im Projekt-Root.
