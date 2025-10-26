@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "nodemon --watch src --ext ts --exec \"tsc --watch --preserveWatchOutput\"",
     "build": "tsc",
-    "start": "node --env-file=.env -r dotenv/config dist/index.js"
+    "start": "node -r dotenv/config dist/index.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

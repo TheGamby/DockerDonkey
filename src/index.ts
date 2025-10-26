@@ -44,7 +44,7 @@ const asyncHandler = (fn: any) => (req: any, res: any, next: any) => Promise.res
 
 // Routes: Files
 app.post('/api/files/upload', upload.array('files'), asyncHandler(async (req, res) => {
-  const files = (req.files as Express.Multer.File[] | undefined) || [];
+  const files = (req.files as any[] | undefined) || [];
   const result = files.map(f => ({
     original: f.originalname,
     storedAs: path.basename(f.path),
@@ -160,7 +160,7 @@ app.get('*', (_req, res) => {
 
 // Error handler
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((err: any, _req: any, res: any, _next: any) => {
   console.error(err);
   res.status(500).json({ ok: false, error: err?.message || 'Internal Server Error' });
 });
