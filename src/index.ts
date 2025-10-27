@@ -12,6 +12,11 @@ const PORT = Number(process.env.PORT || 8080);
 const HOST = process.env.HOST || '0.0.0.0';
 const STATIC_DIR = path.join(process.cwd(), 'public');
 const UPLOAD_DIR = path.join(process.cwd(), process.env.UPLOAD_DIR || 'uploads');
+const VIEWS_DIR = path.join(process.cwd(), 'views');
+
+// View engine: EJS
+app.set('views', VIEWS_DIR);
+app.set('view engine', 'ejs');
 
 // Global constant: upstream Git repository to use for status/pull
 export const UPSTREAM_REPO = 'https://github.com/TheGamby/DockerDonkey.git';
@@ -23,7 +28,7 @@ fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',').map(s => s.trim()) || true }));
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(STATIC_DIR));
+app.use(express.static(STATIC_DIR, { index: false }));
 
 // Multer config for uploads
 const storage = multer.diskStorage({
@@ -176,9 +181,9 @@ app.post('/api/docker/containers/create', asyncHandler(async (req, res) => {
 // Health
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
-// Fallback to UI
+// Fallback to UI (render with EJS)
 app.get('*', (_req, res) => {
-  res.sendFile(path.join(STATIC_DIR, 'index.html'));
+  res.render('index');
 });
 
 // Error handler

@@ -150,12 +150,85 @@ async function refreshGit() {
   }
 }
 
+// Wire Git refresh button inside Settings dialog
 $('#refreshGit')?.addEventListener('click', refreshGit);
 
+// Theme handling
+const THEME_KEY = 'dd.theme';
+function getStoredTheme(){ return localStorage.getItem(THEME_KEY) || 'system'; }
+function effectiveTheme(theme){
+  if (!theme) theme = getStoredTheme();
+  if (theme === 'system') {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  return theme;
+}
+function applyTheme(theme){
+  const eff = effectiveTheme(theme);
+  document.documentElement.classList.toggle('dark', eff === 'dark');
+  let link = document.getElementById('favicon');
+  if (!link) { link = document.createElement('link'); link.id = 'favicon'; link.rel = 'icon'; document.head.appendChild(link); }
+  link.href = '/themes/' + (eff === 'dark' ? 'dark' : 'light') + '/favicon.ico';
+}
+function setTheme(theme){ localStorage.setItem(THEME_KEY, theme); applyTheme(theme); }
+function setupThemeAutoListener(){
+  const mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+  if (!mq) return;
+  const handler = ()=>{ if (getStoredTheme() === 'system') applyTheme('system'); };
+  if (mq.addEventListener) mq.addEventListener('change', handler);
+  else if (mq.addListener) mq.addListener(handler);
+}
+function initThemeControls(){
+  const stored = getStoredTheme();
+  const input = {
+    system: $('#themeSystem'),
+    light: $('#themeLight'),
+    dark: $('#themeDark'),
+  };
+  if (input[stored]) input[stored].checked = true; else if (input.system) input.system.checked = true;
+  ['system','light','dark'].forEach(t => input[t]?.addEventListener('change', ()=> setTheme(t)));
+}
+
+// Settings modal logic
+function openSettings(){
+  const modal = $('#settingsModal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  // Theme controls
+  initThemeControls();
+  // load git info when opening
+  const gitEl = $('#gitStatus'); if (gitEl) gitEl.textContent = 'Lade…';
+  refreshGit();
+}
+function closeSettings(){ $('#settingsModal')?.classList.add('hidden'); }
+
+// Side menu logic
+function openMenu(){ $('#menuWrapper')?.classList.remove('hidden'); }
+function closeMenu(){ $('#menuWrapper')?.classList.add('hidden'); }
+
+function setupUIChrome(){
+  $('#settingsBtn')?.addEventListener('click', openSettings);
+  $('#settingsClose')?.addEventListener('click', closeSettings);
+  $('#settingsBackdrop')?.addEventListener('click', closeSettings);
+  $('#menuBtn')?.addEventListener('click', openMenu);
+  $('#menuBackdrop')?.addEventListener('click', closeMenu);
+  // Close menu when clicking any link inside
+  $$('#menuDrawer a').forEach(a => a.addEventListener('click', closeMenu));
+  // Esc closes overlays
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'Escape') { closeSettings(); closeMenu(); }
+  });
+}
+
 (async function init(){
+  // Ensure theme is applied on initial load and listen to system changes
+  applyTheme(getStoredTheme());
+  setupThemeAutoListener();
+
+  setupUIChrome();
   wirePullForm();
   wireToggleAll();
   wireUpload();
   await health();
-  await Promise.all([refreshContainers(), refreshImages(), refreshGit()]);
+  await Promise.all([refreshContainers(), refreshImages()]);
 })();

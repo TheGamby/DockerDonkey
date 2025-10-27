@@ -4,9 +4,24 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>DockerDonkey</title>
+  <script>
+    // Apply saved theme ASAP to reduce flash
+    (function(){
+      try{
+        var stored = localStorage.getItem('dd.theme') || 'system';
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var effective = stored === 'system' ? (prefersDark ? 'dark' : 'light') : stored;
+        document.documentElement.classList.toggle('dark', effective === 'dark');
+        var link = document.getElementById('favicon');
+        if (!link) { link = document.createElement('link'); link.id = 'favicon'; link.rel = 'icon'; document.head.appendChild(link); }
+        link.href = '/themes/' + (effective === 'dark' ? 'dark' : 'light') + '/favicon.ico';
+      }catch(e){}
+    })();
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: { brand: { 500: '#0ea5e9', 600: '#0284c7' } }
@@ -14,10 +29,10 @@
       }
     }
   </script>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🐳</text></svg>">
+  <link id="faviconFallback" rel="icon" href="/themes/light/favicon.ico">
 </head>
-<body class="bg-slate-50 text-slate-800">
-  <header class="sticky top-0 z-10 backdrop-blur bg-white/80 border-b border-slate-200">
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+  <header class="sticky top-0 z-10 backdrop-blur bg-white/80 border-b border-slate-200 dark:bg-slate-900/70 dark:border-slate-700">
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
       <button id="menuBtn" class="p-2 rounded hover:bg-slate-100" title="Menü" aria-label="Menü">
         <img src="/icons/menu.svg" alt="Menü" class="w-5 h-5" />
@@ -36,7 +51,7 @@
   <!-- Side Menu -->
   <div id="menuWrapper" class="hidden fixed inset-0 z-40">
     <div id="menuBackdrop" class="absolute inset-0 bg-black/30"></div>
-    <nav id="menuDrawer" class="absolute inset-y-0 left-0 w-64 bg-white border-r border-slate-200 shadow-lg p-4 space-y-2">
+    <nav id="menuDrawer" class="absolute inset-y-0 left-0 w-64 bg-white border-r border-slate-200 shadow-lg p-4 space-y-2 dark:bg-slate-800 dark:border-slate-700">
       <div class="font-semibold mb-2">Menü</div>
       <a href="#containersSection" class="block px-2 py-1 rounded hover:bg-slate-100">Container</a>
       <a href="#imagesSection" class="block px-2 py-1 rounded hover:bg-slate-100">Images</a>
@@ -48,18 +63,34 @@
   <div id="settingsModal" class="hidden fixed inset-0 z-50">
     <div id="settingsBackdrop" class="absolute inset-0 bg-black/40"></div>
     <div class="absolute inset-0 flex items-center justify-center p-4">
-      <div class="bg-white rounded-xl shadow-xl w-full max-w-lg">
-        <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-lg dark:bg-slate-800 dark:text-slate-100">
+        <div class="p-4 border-b border-slate-200 flex items-center justify-between dark:border-slate-700">
           <h3 class="font-semibold">Einstellungen</h3>
-          <button id="settingsClose" class="p-2 rounded hover:bg-slate-100" aria-label="Schließen">✕</button>
+          <button id="settingsClose" class="p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Schließen">✕</button>
         </div>
         <div class="p-4 space-y-6">
+          <section>
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-medium">Darstellung</h4>
+            </div>
+            <div class="text-sm grid grid-cols-1 gap-2">
+              <label class="flex items-center gap-2">
+                <input type="radio" name="theme" id="themeSystem" value="system" class="accent-brand-600" /> System
+              </label>
+              <label class="flex items-center gap-2">
+                <input type="radio" name="theme" id="themeLight" value="light" class="accent-brand-600" /> Hell
+              </label>
+              <label class="flex items-center gap-2">
+                <input type="radio" name="theme" id="themeDark" value="dark" class="accent-brand-600" /> Dunkel
+              </label>
+            </div>
+          </section>
           <section>
             <div class="flex items-center justify-between mb-2">
               <h4 class="font-medium">Aktualisierung (Git)</h4>
               <button id="refreshGit" class="text-sm text-brand-600 hover:underline">Aktualisieren</button>
             </div>
-            <div id="gitStatus" class="text-sm text-slate-600">Lade…</div>
+            <div id="gitStatus" class="text-sm text-slate-600 dark:text-slate-300">Lade…</div>
           </section>
         </div>
       </div>
@@ -69,16 +100,16 @@
   <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="lg:col-span-2 space-y-6">
-        <div id="containersSection" class="bg-white rounded-xl shadow-sm border border-slate-200">
-          <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+        <div id="containersSection" class="bg-white rounded-xl shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+          <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
             <h2 class="font-semibold">Container</h2>
             <label class="text-sm flex items-center gap-2"><input id="toggleAll" type="checkbox" class="accent-brand-600"> Alle anzeigen</label>
           </div>
           <div id="containers" class="divide-y divide-slate-100"></div>
         </div>
 
-        <div id="imagesSection" class="bg-white rounded-xl shadow-sm border border-slate-200">
-          <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+        <div id="imagesSection" class="bg-white rounded-xl shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+          <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
             <h2 class="font-semibold">Images</h2>
             <form id="pullForm" class="flex items-center gap-2">
               <input id="pullImage" type="text" placeholder="nginx:latest" class="border rounded px-2 py-1 text-sm" />
@@ -128,6 +159,19 @@
     .btn{ @apply bg-brand-600 hover:bg-brand-500 text-white text-sm rounded px-3 py-1; }
     .btn.danger{ @apply bg-red-600 hover:bg-red-500; }
     .btn.outline{ @apply bg-white text-slate-700 border border-slate-300 hover:bg-slate-50; }
+    .dark .btn.outline{ @apply bg-slate-800 text-slate-100 border-slate-600 hover:bg-slate-700; }
+    /* Subtle themed background watermark */
+    body {
+      /* Wash the image slightly to keep it subtle */
+      background-image: linear-gradient(rgba(255,255,255,0.65), rgba(255,255,255,0.65)), url('/themes/light/background_1920x1080.png');
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-position: center;
+      background-size: cover;
+    }
+    .dark body {
+      background-image: linear-gradient(rgba(15,23,42,0.65), rgba(15,23,42,0.65)), url('/themes/dark/background_1920x1080.png');
+    }
   </style>
 
   <script src="/app.js" type="module"></script>
